@@ -8,7 +8,7 @@ The Dockerfile contains two container definitions:
 
 The compose file contains a basic setup to run the DEV container locallly. Since some IDEs depend on an SSH connection to a container, SSHD is started in the service defined by the compose file.
 
-The user for the Docker container is 'dev'. The compose file maps '~/git' on the host machine to '/home/dev/git' in the container, so we can check out our project there.
+The user for the Docker container is `dev`. The compose file maps `~/git` on the host machine to `/home/dev/git` in the container, so we can check out our project there.
 
 ## Scripts ##
 
@@ -16,20 +16,20 @@ The scripts directory has a few helpers for easire building and running of the c
 
 #### Building the container image  ####
 
-'docker build' (re)builds and tags the container image
+`docker build` (re)builds and tags the container image
 
 #### Starting  ####
 
-'docker up' starts the container in the background
+`docker up` starts the container in the background
 
 #### Stopping  ####
 
-'docker down' stops the runnung container
+`docker down` stops the runnung container
 
 #### Entering the container/Running commands  ####
 
-- Via docker exec: 'docker run'
-- Via ssh: 'ssh dev@localhost -p 2222', password is 'dev'
+- Via docker exec: `docker run`
+- Via ssh: `ssh dev@localhost -p 2222`, password is `dev`
 
 ## Miscellaneous ##
 
