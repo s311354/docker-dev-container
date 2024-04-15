@@ -1,0 +1,88 @@
+#######################################
+# CI image:
+#   the one used by your CI server
+#######################################
+FROM ubuntu:20.04 as docker_ci_image
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG CLANG_VERSION=12
+ARG CMAKE_VERSION=3.25.1
+ARG NUM_JOBS=4
+
+RUN mkdir -p /run/sshd && \
+    apt-get update && apt-get -y dist-upgrade && \
+    apt-get -y install --fix-missing \
+    build-essential \
+    bzip2 \
+    ccache \ 
+    clang-${CLANG_VERSION} \
+    clangd-${CLANG_VERSION} \
+    clang-format-${CLANG_VERSION} \
+    clang-tidy-${CLANG_VERSION} \
+    cmake \
+    cppcheck \
+    curl \
+    doxygen \
+    gcovr \
+    git \
+    graphviz \
+    libclang-${CLANG_VERSION}-dev \
+    linux-tools-generic \
+    lldb-${CLANG_VERSION} \
+    lld-${CLANG_VERSION} \
+    lsb-release \
+    ninja-build \
+    python3 \
+    python3-pip \
+    shellcheck \
+    software-properties-common \
+    ssh \
+    sudo \
+    tar \
+    unzip \
+    valgrind \
+    wget && \
+    \
+    pip install behave conan pexpect requests && \
+    apt-get autoremove -y && apt-get clean && \
+    \
+    for c in $(ls /usr/bin/clang*-${CLANG_VERSION}); do link=$(echo $c | sed "s/-${CLANG_VERSION}//"); ln -sf $c $link; done && \
+    update-alternatives --install /usr/bin/cc cc /usr/bin/clang 1000 && \
+    update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 1000 
+
+WORKDIR /var/tmp/build
+RUN curl -sSL https://github.com/include-what-you-use/include-what-you-use/archive/refs/heads/clang_${CLANG_VERSION}.zip -o temp.zip && \
+      unzip temp.zip && rm temp.zip && mv include-what-you-use-clang_${CLANG_VERSION}/* . && rm -r include-what-you-use-clang_${CLANG_VERSION} && \
+      cmake -DCMAKE_INSTALL_PREFIX=/usr -Bcmake-build && \
+      cmake --build cmake-build --target install -- -j ${NCPU} && \
+      ldconfig 
+
+WORKDIR /
+RUN rm -rf /var/tmp/build
+
+#######################################
+# DEV image:
+#   the one you run locally
+#######################################
+FROM docker_ci_image as docker_dev_image
+
+RUN apt-get -y install --fix-missing \
+    cmake-curses-gui \
+    gdb \
+    gdbserver \
+    python-is-python3 \
+    vim \
+    neovim \
+    && apt-get autoremove -y && apt-get clean && \
+    \
+    groupadd -g 1000 dev && \
+    useradd -m -u 1000 -g 1000 -d /home/dev -s /bin/bash dev && \
+    usermod -a -G adm,cdrom,sudo,dip,plugdev dev && \
+    echo 'dev:dev' | chpasswd && \
+    echo "dev  ALL=(ALL:ALL) ALL" >> /etc/sudoers
+    
+USER dev
+WORKDIR /home/dev
+
+RUN sed -i 's/\\h/docker/;s/01;32m/01;33m/' /home/dev/.bashrc \
+  && mkdir -p /home/dev/git
