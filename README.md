@@ -1,3 +1,5 @@
+[![Docker Image CI](https://github.com/s311354/docker-dev-container/actions/workflows/docker-image.yml/badge.svg)](https://github.com/s311354/docker-dev-container/actions/workflows/docker-image.yml)
+
 ## The container ##
 
 The Dockerfile contains two container definitions:
